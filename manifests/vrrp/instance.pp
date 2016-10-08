@@ -149,6 +149,9 @@
 #                          easily export a script resource on each node in the
 #                          pool. Defaults to false, set to true to collect
 #                          exported scripts.
+#
+# $filter_on_tag           If set, used for filtering collected resources based
+#                          on equality match against tag metaparameter.
 
 define keepalived::vrrp::instance (
   $interface,
@@ -182,6 +185,7 @@ define keepalived::vrrp::instance (
   $use_vmac                   = false,
   $vmac_xmit_base             = true,
   $collect_exported           = false,
+  $filter_on_tag              = undef,
 ) {
   $_name = regsubst($name, '[:\/\n]', '')
 
@@ -207,7 +211,11 @@ define keepalived::vrrp::instance (
   }
 
   if $collect_exported {
-    Keepalived::Vrrp::Script <<| vrrp_instance == $_name |>>
+    if ($filter_on_tag != undef) {
+      Keepalived::Vrrp::Script <<| vrrp_instance == $_name and tag == $filter_on_tag |>>
+    } else {
+      Keepalived::Vrrp::Script <<| vrrp_instance == $_name |>>
+    }
   }
 }
 

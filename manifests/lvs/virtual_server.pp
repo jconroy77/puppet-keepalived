@@ -80,6 +80,11 @@
 #   you to easily export a real_server resource on each node in the pool.
 #   Defaults to true => collect exported real_servers
 #
+# [*filter_on_tag*]
+#   If set, used for filtering collected resources based on equality match
+#   against tag metaparameter.
+#   Default: unset => no filtering on tag
+
 define keepalived::lvs::virtual_server (
   $lb_algo,
   $ip_address          = undef,
@@ -99,6 +104,7 @@ define keepalived::lvs::virtual_server (
   $sorry_server        = undef,
   $tcp_check           = undef,
   $virtualhost         = undef,
+  $filter_on_tag       = undef,
 ) {
   $_name = regsubst($name, '[:\/\n]', '')
 
@@ -167,6 +173,10 @@ define keepalived::lvs::virtual_server (
   }
 
   if $collect_exported {
-    Keepalived::Lvs::Real_server <<| virtual_server == $_name |>>
+    if ($filter_on_tag != undef) {
+      Keepalived::Lvs::Real_server <<| virtual_server == $_name and tag == $filter_on_tag |>>
+    } else {
+      Keepalived::Lvs::Real_server <<| virtual_server == $_name |>>
+    }
   }
 }
